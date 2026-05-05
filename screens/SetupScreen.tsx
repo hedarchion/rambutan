@@ -163,8 +163,8 @@ export interface SetupScreenProps {
   onGraderNameChange: (name: string) => void;
   level: string;
   onLevelChange: (level: string) => void;
-  part: Part;
-  onPartChange: (part: Part) => void;
+  parts: Part[];
+  onPartsChange: (parts: Part[]) => void;
   savedSessions: SessionRecord[];
   onResumeSession: (session: SessionRecord) => void;
   onDeleteSession: (id: string, e: React.MouseEvent) => void;
@@ -190,8 +190,8 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
   onGraderNameChange,
   level,
   onLevelChange,
-  part,
-  onPartChange,
+  parts,
+  onPartsChange,
   savedSessions,
   onResumeSession,
   onDeleteSession,
@@ -214,12 +214,21 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
   const isLowerForm = level.includes('Form 1') || level.includes('Form 2') || level.includes('Form 3');
   const availableParts: Part[] = isLowerForm ? ['1', '2'] : ['1', '2', '3'];
 
-  // Handle auto-reset of part if user switches to a form where current part is invalid
+  // Handle auto-reset of parts if user switches to a form where Part 3 is unavailable
   useEffect(() => {
-    if (!availableParts.includes(part)) {
-      onPartChange('1');
+    if (!availableParts.includes('3') && parts.includes('3')) {
+      onPartsChange(parts.filter(p => p !== '3'));
     }
-  }, [level, part, availableParts, onPartChange]);
+  }, [level, parts, availableParts, onPartsChange]);
+
+  const togglePart = (p: Part) => {
+    if (!availableParts.includes(p)) return;
+    if (parts.includes(p)) {
+      if (parts.length > 1) onPartsChange(parts.filter(x => x !== p));
+    } else {
+      onPartsChange([...parts, p].sort() as Part[]);
+    }
+  };
 
   const levels = [
     { id: 'Form 1 (A2 Revise)', label: 'Form 1', sub: 'A2 Revise' },
@@ -323,21 +332,22 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
                             </div>
                         </div>
 
-                        {/* Part Selector */}
+                        {/* Part Selector (multi-select) */}
                         <div className="space-y-3">
                             <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1 flex items-center gap-2">
-                                <Layers size={12} /> Part
+                                <Layers size={12} /> Parts
                             </label>
                             <div className="grid grid-cols-1 gap-2">
                                 {(['1', '2', '3'] as Part[]).map((p) => {
                                     const isDisabled = !availableParts.includes(p);
-                                    const isSelected = part === p;
+                                    const isSelected = parts.includes(p);
                                     return (
                                         <button
                                             key={p}
+                                            type="button"
                                             disabled={isDisabled}
-                                            onClick={() => onPartChange(p)}
-                                            className={`flex items-center px-4 py-3 rounded-xl border transition-all ${
+                                            onClick={() => togglePart(p)}
+                                            className={`flex items-center px-4 py-3 rounded-xl border transition-all text-left ${
                                                 isDisabled
                                                 ? 'opacity-30 cursor-not-allowed bg-zinc-900 border-zinc-800'
                                                 : isSelected
@@ -345,10 +355,10 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
                                                     : 'bg-zinc-900/40 border-zinc-800 hover:bg-zinc-800/60 hover:border-zinc-700'
                                             }`}
                                         >
-                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-lg mr-4 border ${
-                                                isSelected ? 'bg-zinc-200 text-zinc-900 border-white shadow-sm' : 'bg-zinc-800 text-zinc-500 border-zinc-700'
+                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-lg mr-4 border shrink-0 ${
+                                                isSelected ? 'bg-rose-500 text-white border-rose-500 shadow-sm' : 'bg-zinc-800 text-zinc-500 border-zinc-700'
                                             }`}>
-                                                {p}
+                                                {isSelected ? <CheckCircle size={16} /> : p}
                                             </div>
                                             <div className="text-left">
                                                 <div className={`text-xs font-bold uppercase tracking-wide ${isSelected ? 'text-white' : 'text-zinc-400'}`}>Part {p}</div>
@@ -423,7 +433,7 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
 
                                     <div className="flex items-center gap-2 mb-4">
                                         <span className="text-[10px] font-bold bg-zinc-950 px-2 py-1 rounded border border-zinc-800 text-zinc-400">{s.level.split('(')[0].trim()}</span>
-                                        <span className="text-[10px] font-bold bg-zinc-950 px-2 py-1 rounded border border-zinc-800 text-zinc-400">Part {s.part}</span>
+                                        <span className="text-[10px] font-bold bg-zinc-950 px-2 py-1 rounded border border-zinc-800 text-zinc-400">Parts {s.parts?.join(', ') || '?'}</span>
                                         <span className="text-[10px] font-bold text-zinc-600 px-1">{s.students.length} students</span>
                                     </div>
 

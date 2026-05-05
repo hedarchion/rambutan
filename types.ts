@@ -18,24 +18,19 @@ export interface Annotation {
   id: string;
   mode: GradingMode;
   pageIndex: number;
-  // Content mode: dot (points) or rect (errors like LOG, MP)
-  // Others: rect
-  type: 'dot' | 'rect' | 'stamp'; 
-  
-  // For Dot type
+  type: 'dot' | 'rect' | 'stamp';
+
   x?: number;
   y?: number;
-  
-  // For Rect type (supports multiple areas for multiline selections)
-  rects?: Rect[]; 
 
-  text?: string; // Comment
-  code?: string; // For errors (SP, GR, LOG, CON, etc.)
-  correction?: string; // For correction suggestion
-  number?: number; // For content points sequence
-  isElaboration?: boolean; // For content sub-points (e.g. 1a, 1b)
+  rects?: Rect[];
 
-  // For Stamp type
+  text?: string;
+  code?: string;
+  correction?: string;
+  number?: number;
+  isElaboration?: boolean;
+
   stampData?: {
     scores: StudentScore;
     total: number;
@@ -54,7 +49,10 @@ export interface StudentScore {
 export interface Student {
   id: string;
   name: string;
-  images: string[]; // Base64 data URLs of essay pages
+  realName: string;
+  part: Part;
+  isCover?: boolean;
+  images: string[];
   annotations: Annotation[];
   scores: StudentScore;
   justifications: {
@@ -63,15 +61,16 @@ export interface Student {
     organisation: string;
     language: string;
   };
-  timeSpent: number; // in seconds
+  timeSpent: number;
 }
 
 export interface SessionData {
   name: string;
-  graderName?: string; // Added grader name
+  graderName?: string;
   level: string;
-  part: Part;
-  taskDescription: string;
+  parts: Part[];
+  taskDescriptions: Record<Part, string>;
+  taskImages: Record<Part, string>;
   students: Student[];
   createdAt: string;
   lastStudentIndex?: number;

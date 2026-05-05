@@ -1,13 +1,13 @@
 import React from 'react';
 import { Search, Download, FileText, ChevronLeft, CheckCircle } from 'lucide-react';
-import { Student, GradingMode } from '../types';
+import { Student, GradingMode, Part } from '../types';
 import { Button } from '../components/Button';
 
 interface ReportScreenProps {
   sessionName: string;
   students: Student[];
   level: string;
-  part: string;
+  parts: Part[];
   classStats: {
     avg: string;
     median: string;
@@ -15,6 +15,7 @@ interface ReportScreenProps {
     categories: Array<{ key: string; label: string; value: string; color: string }>;
     topErrors: Array<{ code: string; count: number; label: string; mode: GradingMode }>;
     distribution: number[];
+    partStats?: Record<string, { avg: string; count: number; catAvgs: Record<string, string> }>;
   } | null;
   reportSearch: string;
   onReportSearchChange: (search: string) => void;
@@ -28,7 +29,7 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
   sessionName,
   students,
   level,
-  part,
+  parts,
   classStats,
   reportSearch,
   onReportSearchChange,
@@ -45,7 +46,7 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
             <h1 className="text-3xl font-black text-white tracking-tight mb-2">Session Report</h1>
             <div className="flex items-center gap-3 text-sm font-bold text-zinc-500">
               <span className="bg-zinc-900 px-3 py-1 rounded-full border border-zinc-800 text-zinc-400">{sessionName}</span>
-              <span className="text-zinc-600">{level} • Part {part}</span>
+              <span className="text-zinc-600">{level} • Parts {parts.join(', ')}</span>
             </div>
           </div>
           <div className="flex gap-3">
@@ -67,6 +68,28 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {classStats?.partStats && Object.keys(classStats.partStats).length > 1 && (
+          <div className="space-y-3">
+            <h3 className="text-sm font-black text-zinc-400 uppercase tracking-widest">Per-Part Averages</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {Object.entries(classStats.partStats).map(([p, ps]) => (
+                <div key={p} className="bg-zinc-900/50 border border-zinc-800 p-4 rounded-2xl">
+                  <p className="text-[10px] font-black text-zinc-500 uppercase mb-2">Part {p} ({ps.count} students)</p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {(['content', 'communicative', 'organisation', 'language'] as const).map(cat => (
+                      <div key={cat} className="text-center">
+                        <div className="text-[8px] font-bold text-zinc-600 uppercase">{cat.slice(0, 3)}</div>
+                        <div className="text-sm font-black text-white">{ps.catAvgs[cat]}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-2 text-xs font-bold text-zinc-400">Overall: {ps.avg}/20</div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -93,6 +116,7 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
               <thead>
                 <tr className="border-b border-zinc-800 bg-zinc-900/50 text-[10px] font-black text-zinc-500 uppercase tracking-widest">
                   <th className="px-6 py-4">Student</th>
+                  <th className="px-6 py-4 text-center">Part</th>
                   <th className="px-6 py-4 text-center">Score</th>
                   <th className="px-6 py-4 text-center">Content</th>
                   <th className="px-6 py-4 text-center">Comm.</th>
@@ -102,11 +126,12 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800/50">
-                {students.filter(s => s.name.toLowerCase().includes(reportSearch.toLowerCase())).map((st) => {
+                {students.filter(s => (s.realName || s.name).toLowerCase().includes(reportSearch.toLowerCase())).map((st) => {
                   const tot: number = Number(st.scores.content) + Number(st.scores.communicative) + Number(st.scores.organisation) + Number(st.scores.language);
                   return (
                     <tr key={st.id} className="group hover:bg-zinc-800/30 transition-colors">
-                      <td className="px-6 py-4"><span className="font-bold text-sm text-zinc-300">{st.name}</span></td>
+                      <td className="px-6 py-4"><span className="font-bold text-sm text-zinc-300">{st.realName || st.name}</span></td>
+                      <td className="px-6 py-4 text-center"><span className="text-xs font-bold text-zinc-500">P{st.part}</span></td>
                       <td className="px-6 py-4 text-center">
                         <span className={`inline-flex items-center justify-center h-7 px-3 rounded-lg text-xs font-black border ${tot >= 10 ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border-rose-500/20'}`}>{tot}</span>
                       </td>

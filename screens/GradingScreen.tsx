@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Save, Download, CheckCircle, Clock, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, X, Undo, Redo, ImageIcon, MoreVertical, Layers, MessageSquare, User, Wand2, ArrowUp, ArrowDown, Scissors, Grid, GripVertical, FileStack, FilePen, MousePointer2, Stamp } from 'lucide-react';
-import { GradingMode, Student, StudentScore, Annotation, Part, Point } from '../types';
+import { GradingMode, Student, StudentScore, Annotation, Part } from '../types';
 import { RUBRICS } from '../constants';
 import { Button } from '../components/Button';
 import { Logo } from '../components/Logo';
@@ -36,8 +36,8 @@ interface GradingScreenProps {
   sessionName: string;
   graderName: string;
   level: string;
-  part: Part;
-  taskDescription: string;
+  parts: Part[];
+  taskDescriptions: Record<Part, string>;
   students: Student[];
   currentStudentIndex: number;
   currentImageIndex: number;
@@ -66,6 +66,10 @@ interface GradingScreenProps {
   confirmExit: () => void;
   finishSession: () => void;
   saveStudentName: (name: string) => void;
+  saveStudentRealName: (realName: string) => void;
+  saveStudentPart: (part: Part) => void;
+  saveStudentIsCover: () => void;
+  taskImages: Record<Part, string>;
   mergeNextStudent: () => void;
   mergeWithPrevious: () => void;
   splitStudentAtPage: () => void;
@@ -92,7 +96,7 @@ interface GradingScreenProps {
 }
 
 export const GradingScreen: React.FC<GradingScreenProps> = ({
-  sessionId, sessionName, graderName, level, part, taskDescription,
+  sessionId, sessionName, graderName, level, parts, taskDescriptions,
   students, currentStudentIndex, currentImageIndex, currentStudent,
   activeMode, setActiveMode,
   autoSaveStatus,
@@ -112,6 +116,10 @@ export const GradingScreen: React.FC<GradingScreenProps> = ({
   confirmExit,
   finishSession,
   saveStudentName,
+  saveStudentRealName,
+  saveStudentPart,
+  saveStudentIsCover,
+  taskImages,
   mergeNextStudent,
   mergeWithPrevious,
   splitStudentAtPage,
@@ -228,7 +236,7 @@ export const GradingScreen: React.FC<GradingScreenProps> = ({
 
   const currentTotal = currentStudent ? (currentStudent.scores.content + currentStudent.scores.communicative + currentStudent.scores.organisation + currentStudent.scores.language) : 0;
   const displayImageSrc = (enhanceMode && processedCache[`${sessionId}-${currentStudent?.id}-${currentImageIndex}`]) ? processedCache[`${sessionId}-${currentStudent?.id}-${currentImageIndex}`] : currentStudent?.images[currentImageIndex];
-  const activeRubrics = (activeMode !== 'select' && activeMode !== 'general' && activeMode !== 'stamper') ? RUBRICS[part][activeMode] : [];
+  const activeRubrics = (activeMode !== 'select' && activeMode !== 'general' && activeMode !== 'stamper' && currentStudent) ? RUBRICS[currentStudent.part][activeMode] : [];
   const activeColor = MODE_COLORS[activeMode];
   const isSpecificMode = activeMode !== 'general' && activeMode !== 'select' && activeMode !== 'stamper';
 
@@ -250,7 +258,8 @@ export const GradingScreen: React.FC<GradingScreenProps> = ({
               <div className="flex items-center gap-1.5 overflow-hidden">
                   <span className="text-[11px] font-bold text-zinc-400 whitespace-nowrap">{level.split('(')[0].trim()}</span>
                   <div className="w-1 h-1 rounded-full bg-zinc-700 shrink-0"></div>
-                  <span className="text-[11px] font-bold text-zinc-400 whitespace-nowrap">Part {part}</span>
+                  <span className="text-[11px] font-bold text-zinc-400 whitespace-nowrap">{currentStudent ? (currentStudent.isCover ? 'Non-answer' : `Part ${currentStudent.part}`) : ''}</span>
+                  {currentStudent?.isCover && <span className="text-[9px] font-black text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded uppercase">Cover</span>}
               </div>
           </div>
 
@@ -284,11 +293,11 @@ export const GradingScreen: React.FC<GradingScreenProps> = ({
 
             {showStudentMenu && (
               <div className="absolute top-full left-0 mt-2 w-64 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50 animate-fade-in-up flex flex-col overflow-hidden p-1">
-                <button onClick={() => { mergeWithPrevious(); setShowStudentMenu(false); }} disabled={currentStudentIndex === 0} className="w-full text-left px-3 py-2.5 text-xs font-medium text-zinc-300 hover:text-white hover:bg-white/5 rounded-lg flex items-center transition-colors disabled:opacity-30">
-                  <ArrowUp size={14} className="mr-3 text-emerald-500" /> Merge with Previous
+                <button onClick={() => { mergeWithPrevious(); setShowStudentMenu(false); }} disabled={currentStudentIndex === 0 || (currentStudent && students[currentStudentIndex - 1]?.part !== currentStudent.part)} className="w-full text-left px-3 py-2.5 text-xs font-medium text-zinc-300 hover:text-white hover:bg-white/5 rounded-lg flex items-center transition-colors disabled:opacity-30">
+                  <ArrowUp size={14} className="mr-3 text-emerald-500" /> Merge with Previous {currentStudent && students[currentStudentIndex - 1]?.part !== currentStudent.part && currentStudentIndex > 0 ? <span className="text-[9px] text-zinc-600 ml-1">(different part)</span> : ''}
                 </button>
-                <button onClick={() => { mergeNextStudent(); setShowStudentMenu(false); }} disabled={currentStudentIndex >= students.length - 1} className="w-full text-left px-3 py-2.5 text-xs font-medium text-zinc-300 hover:text-white hover:bg-white/5 rounded-lg flex items-center transition-colors disabled:opacity-30">
-                  <ArrowDown size={14} className="mr-3 text-rose-500" /> Merge with Next
+                <button onClick={() => { mergeNextStudent(); setShowStudentMenu(false); }} disabled={currentStudentIndex >= students.length - 1 || (currentStudent && students[currentStudentIndex + 1]?.part !== currentStudent.part)} className="w-full text-left px-3 py-2.5 text-xs font-medium text-zinc-300 hover:text-white hover:bg-white/5 rounded-lg flex items-center transition-colors disabled:opacity-30">
+                  <ArrowDown size={14} className="mr-3 text-rose-500" /> Merge with Next {currentStudent && students[currentStudentIndex + 1]?.part !== currentStudent.part && currentStudentIndex < students.length - 1 ? <span className="text-[9px] text-zinc-600 ml-1">(different part)</span> : ''}
                 </button>
                 <div className="h-px bg-white/5 my-1.5 mx-2"></div>
                 <button onClick={() => { splitStudentAtPage(); setShowStudentMenu(false); }} disabled={currentImageIndex === 0} className="w-full text-left px-3 py-2.5 text-xs font-medium text-zinc-300 hover:text-white hover:bg-white/5 rounded-lg flex items-center transition-colors disabled:opacity-30">
@@ -435,9 +444,14 @@ export const GradingScreen: React.FC<GradingScreenProps> = ({
                         <span className="text-xl font-black text-zinc-400">Assignment</span>
                      </div>
                 </div>
-                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-zinc-950">
+                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-zinc-950 space-y-3">
+                {currentStudent && taskImages[currentStudent.part] && (
+                  <div className="rounded-xl overflow-hidden border border-zinc-800">
+                    <img src={taskImages[currentStudent.part]} alt={`Part ${currentStudent.part} task`} className="w-full object-contain max-h-64" />
+                  </div>
+                )}
                 <div className="prose prose-sm prose-invert prose-zinc max-w-none text-zinc-400">
-                    {taskDescription ? <Markdown>{taskDescription}</Markdown> : <span className="text-xs text-zinc-600 italic flex items-center justify-center h-32 border border-dashed border-zinc-800 rounded-xl">No task description provided.</span>}
+                    {currentStudent && taskDescriptions[currentStudent.part] ? <Markdown>{taskDescriptions[currentStudent.part]}</Markdown> : <span className="text-xs text-zinc-600 italic flex items-center justify-center h-32 border border-dashed border-zinc-800 rounded-xl">No task description provided.</span>}
                 </div>
                 </div>
             </div>
@@ -553,7 +567,44 @@ export const GradingScreen: React.FC<GradingScreenProps> = ({
         </div>
 
         {/* RUBRIC PANEL */}
-        <div className="w-[320px] bg-zinc-950 border-l border-white/5 flex flex-col z-20 shadow-2xl shrink-0">
+        <div className="w-[300px] lg:w-[320px] bg-zinc-950 border-l border-white/5 flex flex-col z-20 shadow-2xl shrink-0">
+          {/* Page Label Section */}
+          <div className="px-3 py-3 border-b border-white/5 bg-zinc-900/30 space-y-2">
+            <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest px-1">Page Label</span>
+            <input
+              type="text"
+              value={currentStudent?.realName || ''}
+              onChange={(e) => saveStudentRealName(e.target.value)}
+              placeholder="Student name..."
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs font-bold text-white focus:outline-none focus:border-rose-500 placeholder-zinc-500"
+            />
+            <div className="flex gap-1">
+              {parts.map(p => (
+                <button
+                  key={p}
+                  onClick={() => saveStudentPart(p)}
+                  className={`flex-1 px-1.5 py-1.5 rounded-md text-[10px] font-bold transition-all ${
+                    currentStudent?.part === p && !currentStudent?.isCover
+                      ? 'bg-rose-500/20 border border-rose-500/30 text-rose-400'
+                      : 'bg-zinc-800 border border-zinc-700 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-700'
+                  }`}
+                >
+                  P{p}
+                </button>
+              ))}
+              <button
+                onClick={() => saveStudentIsCover()}
+                className={`flex-1 px-1.5 py-1.5 rounded-md text-[10px] font-bold transition-all ${
+                  currentStudent?.isCover
+                    ? 'bg-amber-500/20 border border-amber-500/30 text-amber-400'
+                    : 'bg-zinc-800 border border-zinc-700 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-700'
+                }`}
+              >
+                Non-ans
+              </button>
+            </div>
+          </div>
+
           <div className="px-4 py-5 border-b border-white/5 bg-zinc-900/50">
              <div className="flex items-center justify-between">
                 <div className="flex flex-col">

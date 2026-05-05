@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useGradingSession } from './hooks/useGradingSession';
 import { storage, SessionRecord } from './services/storageService';
@@ -100,130 +99,137 @@ export default function App() {
     return () => clearInterval(interval);
   }, [step, grading.setCurrentStudentTime]);
 
-  // Global navigation key listener (remains in App because it's higher-level session nav)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (step !== 'grading') return;
       const target = e.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return; 
-      
-      // Navigation
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+
       if (e.key === 'ArrowRight') { e.preventDefault(); grading.handleUniversalNext(); }
       if (e.key === 'ArrowLeft') { e.preventDefault(); grading.handleUniversalPrev(); }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [step, grading]); 
+  }, [step, grading]);
 
   const confirmExit = async () => {
     if (grading.sessionId) { await grading.saveToStorage(); }
-    setStep('setup'); 
-    grading.setStudents([]); 
-    grading.setSessionName(''); 
+    setStep('setup');
+    grading.setStudents([]);
+    grading.setSessionName('');
     grading.setGraderName('');
-    grading.setTaskDescription(''); 
-    grading.setHistory({}); 
-    grading.setCurrentStudentIndex(0); 
-    grading.setCurrentImageIndex(0); 
-    grading.setSessionId(null); 
+    grading.setTaskDescriptions({ '1': '' });
+    grading.setTaskImages({});
+    grading.setParts(['1']);
+    grading.setHistory({});
+    grading.setCurrentStudentIndex(0);
+    grading.setCurrentImageIndex(0);
+    grading.setSessionId(null);
     grading.setCreatedAt(null);
   };
 
-  if (step === 'setup') { 
+  if (step === 'setup') {
     return (
-      <SetupScreen greeting={greeting} onNewSession={() => setStep('task')} sessionName={grading.sessionName} onSessionNameChange={grading.setSessionName} graderName={grading.graderName} onGraderNameChange={grading.setGraderName} level={grading.level} onLevelChange={grading.setLevel} part={grading.part} onPartChange={grading.setPart} savedSessions={savedSessions} onResumeSession={onResume} onDeleteSession={onDeleteSessionTrigger} sessionToDelete={sessionToDelete} onCancelDeleteSession={() => setSessionToDelete(null)} onConfirmDeleteSession={confirmDeleteSession} onDuplicateSession={duplicateSession} onExportSession={handleExportSession} onImportSession={handleImportSession} devModeUnlocked={devModeUnlocked} onLogoClick={handleLogoClick} showStorageManager={showStorageManager} onShowStorageManager={setShowStorageManager} onClearCache={async () => { await storage.clearAllProcessedImages(); grading.setProcessedCache({}); }} />
+      <SetupScreen greeting={greeting} onNewSession={() => setStep('task')} sessionName={grading.sessionName} onSessionNameChange={grading.setSessionName} graderName={grading.graderName} onGraderNameChange={grading.setGraderName} level={grading.level} onLevelChange={grading.setLevel} parts={grading.parts} onPartsChange={grading.setParts} savedSessions={savedSessions} onResumeSession={onResume} onDeleteSession={onDeleteSessionTrigger} sessionToDelete={sessionToDelete} onCancelDeleteSession={() => setSessionToDelete(null)} onConfirmDeleteSession={confirmDeleteSession} onDuplicateSession={duplicateSession} onExportSession={handleExportSession} onImportSession={handleImportSession} devModeUnlocked={devModeUnlocked} onLogoClick={handleLogoClick} showStorageManager={showStorageManager} onShowStorageManager={setShowStorageManager} onClearCache={async () => { await storage.clearAllProcessedImages(); grading.setProcessedCache({}); }} />
     );
   }
 
-  if (step === 'task') { 
+  if (step === 'task') {
     return (
-      <TaskScreen 
-        sessionName={grading.sessionName} 
-        taskDescription={grading.taskDescription} 
-        onTaskDescriptionChange={grading.setTaskDescription} 
-        students={grading.students} 
-        isTaskLoading={grading.isTaskLoading} 
-        isScriptLoading={grading.isScriptLoading} 
-        onTaskUpload={grading.handleTaskUpload} 
-        onScriptUpload={grading.handleScriptUpload} 
-        onStartGrading={() => { 
+      <TaskScreen
+        sessionName={grading.sessionName}
+        parts={grading.parts}
+        taskDescriptions={grading.taskDescriptions}
+        onTaskDescriptionChange={grading.setTaskDescriptions}
+        taskImages={grading.taskImages}
+        students={grading.students}
+        isTaskLoading={grading.isTaskLoading}
+        isScriptLoading={grading.isScriptLoading}
+        onTaskUpload={grading.handleTaskUpload}
+        onPasteTaskImage={grading.handlePasteTaskImage}
+        onScriptUpload={grading.handleScriptUpload}
+        onStartGrading={() => {
           if (grading.students.length > 0) {
             grading.ensureSessionId();
-            setStep('grading'); 
+            setStep('grading');
           }
-        }} 
-        onBack={() => setStep('setup')} 
+        }}
+        onBack={() => setStep('setup')}
       />
     );
   }
 
   if (step === 'grading') {
     return (
-      <GradingScreen 
-        sessionId={grading.sessionId} 
-        sessionName={grading.sessionName} 
+      <GradingScreen
+        sessionId={grading.sessionId}
+        sessionName={grading.sessionName}
         graderName={grading.graderName}
-        level={grading.level} 
-        part={grading.part} 
-        taskDescription={grading.taskDescription} 
-        students={grading.students} 
-        currentStudentIndex={grading.currentStudentIndex} 
-        currentImageIndex={grading.currentImageIndex} 
-        currentStudent={grading.currentStudent} 
-        activeMode={grading.activeMode} 
-        setActiveMode={grading.setActiveMode} 
-        autoSaveStatus={grading.autoSaveStatus} 
-        showStudentMenu={showStudentMenu} 
-        setShowStudentMenu={setShowStudentMenu} 
-        tempName={tempName} 
-        setTempName={setTempName} 
-        enhanceMode={grading.enhanceMode} 
-        setEnhanceMode={grading.setEnhanceMode} 
-        processedCache={grading.processedCache} 
-        isProcessingImg={grading.isProcessingImg} 
-        isTaskOpen={isTaskOpen} 
-        setIsTaskOpen={setIsTaskOpen} 
-        showExportMenu={showExportMenu} 
-        setShowExportMenu={setShowExportMenu} 
-        isExporting={grading.isExporting} 
-        currentStudentTime={grading.currentStudentTime} 
-        changeStudent={grading.changeStudent} 
-        handleUniversalNext={grading.handleUniversalNext} 
-        handleUniversalPrev={grading.handleUniversalPrev} 
-        handleManualSave={grading.saveToStorage} 
-        confirmExit={confirmExit} 
-        finishSession={() => setStep('report')} 
-        saveStudentName={grading.saveStudentName} 
-        mergeNextStudent={grading.mergeNextStudent} 
-        mergeWithPrevious={grading.mergeWithPrevious} 
-        splitStudentAtPage={grading.splitStudentAtPage} 
-        updateAnnotation={grading.updateAnnotation} 
-        deleteAnnotation={grading.deleteAnnotation} 
+        level={grading.level}
+        parts={grading.parts}
+        taskDescriptions={grading.taskDescriptions}
+        students={grading.students}
+        currentStudentIndex={grading.currentStudentIndex}
+        currentImageIndex={grading.currentImageIndex}
+        currentStudent={grading.currentStudent}
+        activeMode={grading.activeMode}
+        setActiveMode={grading.setActiveMode}
+        autoSaveStatus={grading.autoSaveStatus}
+        showStudentMenu={showStudentMenu}
+        setShowStudentMenu={setShowStudentMenu}
+        tempName={tempName}
+        setTempName={setTempName}
+        enhanceMode={grading.enhanceMode}
+        setEnhanceMode={grading.setEnhanceMode}
+        processedCache={grading.processedCache}
+        isProcessingImg={grading.isProcessingImg}
+        isTaskOpen={isTaskOpen}
+        setIsTaskOpen={setIsTaskOpen}
+        showExportMenu={showExportMenu}
+        setShowExportMenu={setShowExportMenu}
+        isExporting={grading.isExporting}
+        currentStudentTime={grading.currentStudentTime}
+        changeStudent={grading.changeStudent}
+        handleUniversalNext={grading.handleUniversalNext}
+        handleUniversalPrev={grading.handleUniversalPrev}
+        handleManualSave={grading.saveToStorage}
+        confirmExit={confirmExit}
+        finishSession={() => setStep('report')}
+        saveStudentName={grading.saveStudentName}
+        saveStudentRealName={grading.saveStudentRealName}
+        saveStudentPart={grading.saveStudentPart}
+        saveStudentIsCover={grading.saveStudentIsCover}
+        taskImages={grading.taskImages}
+        mergeNextStudent={grading.mergeNextStudent}
+        mergeWithPrevious={grading.mergeWithPrevious}
+        splitStudentAtPage={grading.splitStudentAtPage}
+        updateAnnotation={grading.updateAnnotation}
+        deleteAnnotation={grading.deleteAnnotation}
         deleteAnnotations={grading.deleteAnnotations}
-        updateScore={grading.updateScore} 
-        updateJustification={grading.updateJustification} 
-        performUndo={grading.performUndo} 
-        performRedo={grading.performRedo} 
-        currentHistory={grading.currentHistory} 
-        handleExportCurrentPage={grading.handleExportCurrentPage} 
-        handleExportAll={grading.handleExportAll} 
-        handleExportCurrentAnnotations={grading.handleExportCurrentAnnotations} 
-        handleExportAllAnnotations={grading.handleExportAllAnnotations} 
-        handleDownloadGradebook={(st) => grading.handleDownloadGradebook(st)} 
-        handlePrintBatchFeedback={(st) => grading.handlePrintBatchFeedback(st)} 
+        updateScore={grading.updateScore}
+        updateJustification={grading.updateJustification}
+        performUndo={grading.performUndo}
+        performRedo={grading.performRedo}
+        currentHistory={grading.currentHistory}
+        handleExportCurrentPage={grading.handleExportCurrentPage}
+        handleExportAll={grading.handleExportAll}
+        handleExportCurrentAnnotations={grading.handleExportCurrentAnnotations}
+        handleExportAllAnnotations={grading.handleExportAllAnnotations}
+        handleDownloadGradebook={(st) => grading.handleDownloadGradebook(st)}
+        handlePrintBatchFeedback={(st) => grading.handlePrintBatchFeedback(st)}
         setStudents={grading.setStudents}
         recordHistory={grading.recordHistory}
         historyRefs={grading.historyRefs}
         setHistory={grading.setHistory}
         addAnnotation={grading.addAnnotation}
-        handleLogoClick={handleLogoClick} 
+        handleLogoClick={handleLogoClick}
       />
     );
   }
 
   if (step === 'report') {
     return (
-      <ReportScreen sessionName={grading.sessionName} students={grading.students} level={grading.level} part={grading.part} classStats={grading.classStats} reportSearch={reportSearch} onReportSearchChange={setReportSearch} onDownloadGradebook={grading.handleDownloadGradebook} onPrintBatchFeedback={grading.handlePrintBatchFeedback} onBackToGrading={() => setStep('grading')} onFinishSession={() => { setStep('setup'); grading.setStudents([]); }} />
+      <ReportScreen sessionName={grading.sessionName} students={grading.students} level={grading.level} parts={grading.parts} classStats={grading.classStats} reportSearch={reportSearch} onReportSearchChange={setReportSearch} onDownloadGradebook={grading.handleDownloadGradebook} onPrintBatchFeedback={grading.handlePrintBatchFeedback} onBackToGrading={() => setStep('grading')} onFinishSession={() => { setStep('setup'); grading.setStudents([]); }} />
     );
   }
 

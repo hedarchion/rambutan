@@ -1,13 +1,31 @@
 
-import { SessionData } from '../types';
+import { SessionData, Part, Student } from '../types';
 
 const DB_NAME = 'RambutanDB';
-const DB_VERSION = 2; // Incremented version to add the processed_images store
+const DB_VERSION = 3;
 const STORE_NAME = 'sessions';
 const PROCESSED_STORE_NAME = 'processed_images';
 
 export interface SessionRecord extends SessionData {
   id: string;
+}
+
+function migrateSession(record: any): SessionRecord {
+  if (Array.isArray(record.parts)) return record as SessionRecord;
+
+  const oldPart: Part = record.part || '1';
+  return {
+    ...record,
+    parts: [oldPart],
+    taskDescriptions: { [oldPart]: record.taskDescription || '' } as Record<Part, string>,
+    taskImages: record.taskImages || ({} as Record<Part, string>),
+    students: (record.students || []).map((s: any) => ({
+      ...s,
+      part: s.part || oldPart,
+      realName: s.realName || s.name || 'Untitled',
+      isCover: s.isCover || false,
+    })),
+  } as SessionRecord;
 }
 
 export interface StorageStats {
@@ -32,8 +50,23 @@ class StorageService {
           db.createObjectStore(STORE_NAME, { keyPath: 'id' });
         }
         if (!db.objectStoreNames.contains(PROCESSED_STORE_NAME)) {
-          // Key format: "sessionId-studentId-imageIndex"
           db.createObjectStore(PROCESSED_STORE_NAME);
+        }
+        if (event.oldVersion < 3) {
+          const tx = (event.target as IDBOpenDBRequest).transaction;
+          if (tx) {
+            const store = tx.objectStore(STORE_NAME);
+            store.openCursor().onsuccess = (cursorEvent) => {
+              const cursor = (cursorEvent.target as IDBRequest<IDBCursorWithValue>).result;
+              if (cursor) {
+                const session = cursor.value;
+                if (typeof session.part === 'string' && !Array.isArray(session.parts)) {
+                  cursor.update(migrateSession(session));
+                }
+                cursor.continue();
+              }
+            };
+          }
         }
       };
 
@@ -73,7 +106,7 @@ class StorageService {
         const request = store.getAll();
 
         request.onsuccess = () => {
-          const results = request.result as SessionRecord[];
+          const results = (request.result as any[]).map(migrateSession) as SessionRecord[];
           resolve(results.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
         };
         request.onerror = () => reject(request.error);
