@@ -109,7 +109,7 @@ export const TaskScreen: React.FC<TaskScreenProps> = ({
                   )}
 
                   <textarea
-                    className="w-full h-20 rounded-xl bg-zinc-900/60 border border-zinc-700 p-3 font-mono text-xs md:text-sm text-zinc-300 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500/50 outline-none transition-all resize-none placeholder-zinc-700 leading-relaxed custom-scrollbar"
+                    className="w-full h-20 rounded-xl bg-zinc-900/60 border border-zinc-700 p-3 font-mono text-xs md:text-sm text-zinc-200 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500/50 outline-none transition-all resize-none placeholder-zinc-500 leading-relaxed custom-scrollbar"
                     value={taskDescriptions[part] || ''}
                     onChange={(e) => onTaskDescriptionChange({ ...taskDescriptions, [part]: e.target.value })}
                     onPaste={(e) => handlePaste(part, e)}

@@ -396,7 +396,7 @@ export const GradingScreen: React.FC<GradingScreenProps> = ({
                         className={`relative px-4 h-9 rounded-lg flex items-center justify-center transition-all duration-150 ${isActive ? 'bg-zinc-800 shadow-md ring-1 ring-white/10' : 'hover:bg-zinc-800/50 opacity-60'}`}
                     >
                         <div className="flex flex-col items-center">
-                            <span className={`text-[11px] font-black transition-colors ${isActive ? 'text-white' : 'text-zinc-500'}`} style={{ color: isActive ? color : undefined }}>
+                            <span className={`text-[11px] font-black transition-colors ${isActive ? 'text-white' : 'text-zinc-400'}`} style={{ color: isActive ? color : undefined }}>
                                 {MODE_LABELS[m]}
                             </span>
                             <span className="text-[7px] font-black text-zinc-600 uppercase mt-0.5">F{i+1}</span>
@@ -648,7 +648,7 @@ export const GradingScreen: React.FC<GradingScreenProps> = ({
                     >
                         {row.score}
                     </div>
-                    <div className={`text-[11px] leading-[1.3] font-medium transition-colors ${isSelected ? 'text-zinc-200' : 'text-zinc-500 group-hover:text-zinc-400'}`}>
+                    <div className={`text-[11px] leading-relaxed font-medium transition-colors ${isSelected ? 'text-zinc-100' : 'text-zinc-400 group-hover:text-zinc-300'}`}>
                         <div className="prose-rubric"><Markdown>{row.desc}</Markdown></div>
                     </div>
                   </div>
@@ -690,7 +690,7 @@ export const GradingScreen: React.FC<GradingScreenProps> = ({
                 <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Feedback</span>
             </div>
             <textarea 
-              className="w-full h-24 bg-zinc-950/50 border border-white/5 rounded-lg p-2 text-[11px] text-zinc-300 resize-none focus:ring-1 focus:bg-zinc-950 transition-all placeholder-zinc-800 leading-normal custom-scrollbar disabled:opacity-20 disabled:cursor-not-allowed" 
+              className="w-full h-24 bg-zinc-950/50 border border-white/10 rounded-lg p-2 text-xs text-zinc-200 resize-none focus:ring-1 focus:bg-zinc-950 focus:border-zinc-600 transition-colors placeholder-zinc-500 leading-relaxed custom-scrollbar disabled:opacity-40 disabled:cursor-not-allowed" 
               style={{ '--tw-ring-color': `${activeColor}40` } as React.CSSProperties}
               placeholder={isSpecificMode ? `Comments for ${MODE_LABELS[activeMode]}` : "Select category..."}
               value={isSpecificMode ? (currentStudent?.justifications[activeMode as keyof StudentScore] || '') : ''} 

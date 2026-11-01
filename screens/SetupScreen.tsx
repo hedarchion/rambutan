@@ -281,12 +281,12 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
                     {/* Session Name Input */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-3">
-                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1 flex items-center gap-2">
-                                <Tag size={12}/> Session Name
+                            <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                                <Tag size={12} aria-hidden /> Session Name
                             </label>
                             <input 
                                 type="text" 
-                                className="w-full bg-transparent border-b-2 border-zinc-800 px-0 py-2 text-xl md:text-2xl font-bold text-white focus:outline-none focus:border-rose-500 placeholder-zinc-800 transition-colors" 
+                                className="w-full bg-transparent border-b-2 border-zinc-800 px-0 py-2 text-xl md:text-2xl font-bold text-white focus:outline-none focus:border-rose-500 placeholder-zinc-600 transition-colors"
                                 placeholder="e.g. 5 Alpha Mid-Term" 
                                 value={sessionName}
                                 onChange={e => onSessionNameChange(e.target.value)}
@@ -294,12 +294,12 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
                             />
                         </div>
                         <div className="space-y-3">
-                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1 flex items-center gap-2">
-                                <UserCircle size={12}/> Grader Name
+                            <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                                <UserCircle size={12} aria-hidden /> Grader Name
                             </label>
                             <input 
                                 type="text" 
-                                className="w-full bg-transparent border-b-2 border-zinc-800 px-0 py-2 text-xl md:text-2xl font-bold text-white focus:outline-none focus:border-emerald-500 placeholder-zinc-800 transition-colors" 
+                                className="w-full bg-transparent border-b-2 border-zinc-800 px-0 py-2 text-xl md:text-2xl font-bold text-white focus:outline-none focus:border-emerald-500 placeholder-zinc-600 transition-colors" 
                                 placeholder="Your Name" 
                                 value={graderName}
                                 onChange={e => onGraderNameChange(e.target.value)}
@@ -310,15 +310,16 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {/* Level Selector */}
                         <div className="space-y-3">
-                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1 flex items-center gap-2">
-                                <GraduationCap size={12} /> Level
+                            <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                                <GraduationCap size={12} aria-hidden /> Level
                             </label>
                             <div className="grid grid-cols-2 gap-2">
                                 {levels.map((l) => (
                                     <button
                                         key={l.id}
                                         onClick={() => onLevelChange(l.id)}
-                                        className={`relative px-3 py-2.5 rounded-xl border text-left transition-all ${
+                                        aria-pressed={level === l.id}
+                                        className={`relative px-3 py-2.5 rounded-xl border text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500/60 ${
                                             level === l.id 
                                             ? 'bg-zinc-800/80 border-zinc-600 ring-1 ring-zinc-500 shadow-lg backdrop-blur-sm' 
                                             : 'bg-zinc-900/40 border-zinc-800 text-zinc-500 hover:bg-zinc-800/60 hover:border-zinc-700'
@@ -334,8 +335,8 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
 
                         {/* Part Selector (multi-select) */}
                         <div className="space-y-3">
-                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1 flex items-center gap-2">
-                                <Layers size={12} /> Parts
+                            <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                                <Layers size={12} aria-hidden /> Parts
                             </label>
                             <div className="grid grid-cols-1 gap-2">
                                 {(['1', '2', '3'] as Part[]).map((p) => {
@@ -347,7 +348,8 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
                                             type="button"
                                             disabled={isDisabled}
                                             onClick={() => togglePart(p)}
-                                            className={`flex items-center px-4 py-3 rounded-xl border transition-all text-left ${
+                                            aria-pressed={isSelected}
+                                            className={`flex items-center px-4 py-3 rounded-xl border transition-colors text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500/60 ${
                                                 isDisabled
                                                 ? 'opacity-30 cursor-not-allowed bg-zinc-900 border-zinc-800'
                                                 : isSelected

@@ -101,10 +101,11 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
                 <input
                   type="text"
-                  placeholder="Search..."
+                  placeholder="Search students..."
+                  aria-label="Search students"
                   value={reportSearch}
                   onChange={e => onReportSearchChange(e.target.value)}
-                  className="bg-zinc-950 border border-zinc-800 text-zinc-300 text-xs font-bold rounded-xl pl-9 pr-4 py-2.5 outline-none w-48"
+                  className="bg-zinc-950 border border-zinc-800 text-zinc-200 text-xs font-semibold rounded-xl pl-9 pr-4 py-2.5 outline-none w-48 placeholder-zinc-500 focus:border-zinc-500 transition-colors"
                 />
               </div>
               <Button variant="secondary" size="sm" onClick={() => onDownloadGradebook(students)} icon={<Download size={14} />}>CSV</Button>

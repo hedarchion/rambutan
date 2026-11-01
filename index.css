@@ -1,0 +1,159 @@
+/* Rambutan design system — supplements the Tailwind CDN with tokens,
+   missing animations, focus treatment, and readability defaults. */
+
+:root {
+  color-scheme: dark;
+  --rambutan-bg: #09090b;
+  --rambutan-panel: #18181b;
+  --rambutan-accent: #f43f5e;
+  --rambutan-focus: rgba(244, 63, 94, 0.45);
+  --rambutan-text-dim: #a1a1aa;
+}
+
+html,
+body {
+  background-color: var(--rambutan-bg);
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgba(244, 63, 94, 0.35);
+  color: #fff;
+}
+
+/* Readable placeholders: zinc-800 (#27272a) on zinc-950 fails contrast. */
+input::placeholder,
+textarea::placeholder {
+  color: #71717a !important;
+  opacity: 1;
+}
+
+/* Consistent, visible keyboard focus without changing layout. */
+:where(button, a, input, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--rambutan-focus);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #3f3f46 transparent;
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
+}
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #3f3f46 transparent;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+}
+
+/* Motion */
+@keyframes rambutan-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes rambutan-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rambutan-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: rambutan-fade-in 0.25s ease-out both;
+}
+.animate-fade-in-up {
+  animation: rambutan-fade-in-up 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.animate-scale-in {
+  animation: rambutan-scale-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: top right;
+}
+
+/* Subtle paper texture used behind the setup screen. */
+.bg-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+@keyframes rambutan-pulse-glow {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.15;
+    filter: blur(80px);
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.24;
+    filter: blur(100px);
+  }
+}
+.animate-pulse-glow {
+  animation: rambutan-pulse-glow 8s ease-in-out infinite;
+}
+
+/* Loading shimmer for page placeholders. */
+@keyframes rambutan-shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-fade-in-up,
+  .animate-scale-in,
+  .animate-pulse-glow {
+    animation: none;
+  }
+  * {
+    scroll-behavior: auto !important;
+  }
+}
